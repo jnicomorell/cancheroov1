@@ -17,6 +17,8 @@ class FieldController extends Controller
             ->with('club')
             ->withAvg('reviews as average_rating', 'rating');
 
+        $this->applyFilters($fields, $request);
+
         return response()->json($fields->paginate());
     }
 
@@ -111,6 +113,8 @@ class FieldController extends Controller
             'is_indoor' => 'boolean',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'price_per_hour' => 'required|numeric',
             'features' => 'array',
         ]);
@@ -135,12 +139,16 @@ class FieldController extends Controller
      */
     public function update(Request $request, Field $field)
     {
+        $this->authorize('update', $field);
+
         $data = $request->validate([
             'club_id' => 'sometimes|exists:clubs,id',
             'name' => 'sometimes|string',
             'sport' => 'sometimes|in:futbol,padel',
             'surface' => 'nullable|string',
             'is_indoor' => 'boolean',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'price_per_hour' => 'sometimes|numeric',
             'features' => 'array',
         ]);
@@ -155,6 +163,8 @@ class FieldController extends Controller
      */
     public function destroy(Field $field)
     {
+        $this->authorize('delete', $field);
+
         $field->delete();
 
         return response()->json(null, 204);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
+use App\Models\SharedCost;
 use App\Jobs\SendReservationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,6 +100,18 @@ class ReservationController extends Controller
             'end_time' => 'required|date|after:start_time',
         ]);
 
+        $conflict = Reservation::where('field_id', $reservation->field_id)
+            ->where('id', '!=', $reservation->id)
+            ->where(function ($query) use ($data) {
+                $query->where('start_time', '<', $data['end_time'])
+                    ->where('end_time', '>', $data['start_time']);
+            })
+            ->exists();
+
+        if ($conflict) {
+            return response()->json(['message' => 'Field is already booked for that time'], 422);
+        }
+
         $field = $reservation->field;
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
         $price = $field->price_per_hour * $hours;
@@ -109,6 +122,28 @@ class ReservationController extends Controller
         $reservation->save();
 
         return response()->json($reservation);
+    }
+
+    public function addParticipant(Request $request, Reservation $reservation)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $reservation->participants()->attach($data['user_id'], ['amount' => $data['amount']]);
+
+        SharedCost::create([
+            'reservation_id' => $reservation->id,
+            'user_id' => $data['user_id'],
+            'amount' => $data['amount'],
+        ]);
+
+        return response()->json(['message' => 'Participant added'], 201);
     }
 
     /**
