@@ -17,6 +17,8 @@ class FieldController extends Controller
             ->with('club')
             ->withAvg('reviews as average_rating', 'rating');
 
+        $this->applyFilters($fields, $request);
+
         return response()->json($fields->paginate());
     }
 
@@ -135,6 +137,8 @@ class FieldController extends Controller
      */
     public function update(Request $request, Field $field)
     {
+        $this->authorize('update', $field);
+
         $data = $request->validate([
             'club_id' => 'sometimes|exists:clubs,id',
             'name' => 'sometimes|string',
@@ -155,6 +159,8 @@ class FieldController extends Controller
      */
     public function destroy(Field $field)
     {
+        $this->authorize('delete', $field);
+
         $field->delete();
 
         return response()->json(null, 204);
