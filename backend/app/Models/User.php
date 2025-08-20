@@ -28,6 +28,11 @@ class User extends Authenticatable
         'password',
         'role',
         'fcm_token',
+        'provider',
+        'provider_id',
+        'provider_token',
+        'provider_refresh_token',
+        'provider_claims',
     ];
 
     /**
@@ -51,6 +56,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => 'string',
+            'provider_claims' => 'array',
         ];
     }
 
