@@ -15,17 +15,35 @@ Cancheroo es una plataforma para reserva de canchas de fútbol y pádel.
 
 ## Desarrollo
 
+El proyecto está preparado para ejecutarse con [DDEV](https://ddev.readthedocs.io/), lo que permite levantar un entorno de desarrollo completo mediante contenedores.
+
 ### Backend
 
-```bash
-cd backend
-php artisan serve
-```
+1. Copiar el entorno pensado para DDEV y arrancar los contenedores:
+
+   ```bash
+   cp backend/.env.ddev backend/.env
+   ddev start
+   ```
+
+2. Instalar dependencias y ejecutar migraciones:
+
+   ```bash
+   ddev composer install -d backend
+   ddev exec -d backend php artisan migrate
+   ```
+
+3. La API quedará disponible en `https://cancheroo.ddev.site`. Las pruebas y otros comandos de Laravel pueden ejecutarse con:
+
+   ```bash
+   ddev exec -d backend php artisan test
+   ```
 
 ### Mobile
 
+Las dependencias de la app móvil también pueden manejarse desde DDEV:
+
 ```bash
-cd mobile
-npm install
-npm start
+ddev npm install -d mobile
+ddev npm start -d mobile
 ```
