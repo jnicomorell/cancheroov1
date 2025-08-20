@@ -135,6 +135,8 @@ class FieldController extends Controller
      */
     public function update(Request $request, Field $field)
     {
+        $this->authorize('update', $field);
+
         $data = $request->validate([
             'club_id' => 'sometimes|exists:clubs,id',
             'name' => 'sometimes|string',
@@ -155,6 +157,8 @@ class FieldController extends Controller
      */
     public function destroy(Field $field)
     {
+        $this->authorize('delete', $field);
+
         $field->delete();
 
         return response()->json(null, 204);

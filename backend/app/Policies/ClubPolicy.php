@@ -2,24 +2,21 @@
 
 namespace App\Policies;
 
-use App\Models\{Field, Role, User};
+use App\Models\{Club, Role, User};
 
-class FieldPolicy
+class ClubPolicy
 {
-    /**
-     * Determine whether the user can create fields.
-     */
     public function create(User $user): bool
     {
         return in_array($user->role, [Role::ADMIN, Role::SUPERADMIN], true);
     }
 
-    public function update(User $user, Field $field): bool
+    public function update(User $user, Club $club): bool
     {
         return in_array($user->role, [Role::ADMIN, Role::SUPERADMIN], true);
     }
 
-    public function delete(User $user, Field $field): bool
+    public function delete(User $user, Club $club): bool
     {
         return in_array($user->role, [Role::ADMIN, Role::SUPERADMIN], true);
     }
