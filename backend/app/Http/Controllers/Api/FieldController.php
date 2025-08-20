@@ -113,6 +113,8 @@ class FieldController extends Controller
             'is_indoor' => 'boolean',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'price_per_hour' => 'required|numeric',
             'features' => 'array',
         ]);
@@ -145,6 +147,8 @@ class FieldController extends Controller
             'sport' => 'sometimes|in:futbol,padel',
             'surface' => 'nullable|string',
             'is_indoor' => 'boolean',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'price_per_hour' => 'sometimes|numeric',
             'features' => 'array',
         ]);
