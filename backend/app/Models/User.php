@@ -62,4 +62,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reservation::class);
     }
+
+    public function participantReservations()
+    {
+        return $this->belongsToMany(Reservation::class, 'reservation_participants')
+            ->withPivot('amount')
+            ->withTimestamps();
+    }
 }

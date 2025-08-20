@@ -62,9 +62,27 @@ class ReservationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Reservation $reservation)
     {
-        //
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+        ]);
+
+        $field = $reservation->field;
+        $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
+        $price = $field->price_per_hour * $hours;
+
+        $reservation->start_time = $data['start_time'];
+        $reservation->end_time = $data['end_time'];
+        $reservation->price = $price;
+        $reservation->save();
+
+        return response()->json($reservation);
     }
 
     /**
