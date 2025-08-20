@@ -51,6 +51,10 @@ class ReservationController extends Controller
      */
     public function show(Reservation $reservation)
     {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $reservation->load('field.club');
         return response()->json($reservation);
     }
@@ -66,8 +70,15 @@ class ReservationController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Reservation $reservation)
     {
-        //
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $reservation->status = 'cancelled';
+        $reservation->save();
+
+        return response()->json($reservation);
     }
 }
