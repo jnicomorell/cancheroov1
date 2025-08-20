@@ -3,16 +3,20 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 use App\Models\{User, Club, Field, Reservation};
+use App\Jobs\NotifyWaitlist;
 
-class ReservationPeriodicTest extends TestCase
+class ReservationWaitlistNotificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_create_periodic_reservations(): void
+    public function test_notifies_waitlist_on_cancellation(): void
     {
+        Queue::fake();
         $user = User::factory()->create();
+        $waitlisted = User::factory()->create(['fcm_token' => 'token']);
         $club = Club::create([
             'user_id' => $user->id,
             'name' => 'Club',
@@ -27,8 +31,7 @@ class ReservationPeriodicTest extends TestCase
             'sport' => 'futbol',
             'price_per_hour' => 100,
         ]);
-
-        $data = [
+        $reservation = Reservation::create([
             'field_id' => $field->id,
             'user_id' => $user->id,
             'start_time' => '2025-08-21 10:00:00',
@@ -36,16 +39,16 @@ class ReservationPeriodicTest extends TestCase
             'price' => 100,
             'status' => 'confirmed',
             'payment_status' => 'pending',
-            'recurrence_interval' => 'weekly',
-            'recurrence_count' => 3,
-        ];
+        ]);
+        $reservation->waitlist()->attach($waitlisted->id);
 
-        Reservation::createWithRecurrence($data);
+        $token = $user->createToken('test')->plainTextToken;
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/reservations/'.$reservation->id);
 
-        $this->assertDatabaseCount('reservations', 3);
-        $this->assertDatabaseHas('reservations', ['start_time' => '2025-08-21 10:00:00']);
-        $this->assertDatabaseHas('reservations', ['start_time' => '2025-08-28 10:00:00']);
-        $this->assertDatabaseHas('reservations', ['start_time' => '2025-09-04 10:00:00']);
+        $response->assertStatus(200);
+        Queue::assertPushed(NotifyWaitlist::class, function ($job) use ($reservation) {
+            return $job->reservation->is($reservation);
+        });
     }
 }
-

@@ -33,9 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update']);
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']);
     Route::post('/reservations/{reservation}/pay', [ReservationController::class, 'pay']);
-    Route::post('/reservations/{reservation}/invite', [ReservationController::class, 'invite']);
-    Route::post('/reservations/{reservation}/confirm', [ReservationController::class, 'confirm']);
-    Route::get('/reservations/{reservation}/ics', [ReservationController::class, 'ics']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);

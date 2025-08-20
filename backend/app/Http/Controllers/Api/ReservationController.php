@@ -7,7 +7,7 @@ use App\Models\Field;
 use App\Models\Reservation;
 use App\Models\SharedCost;
 use App\Jobs\SendReservationReminder;
-use App\Jobs\SendPushNotification;
+use App\Jobs\NotifyWaitlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
@@ -32,25 +32,31 @@ class ReservationController extends Controller
             'field_id' => 'required|exists:fields,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
+            'recurrence_interval' => 'nullable|in:daily,weekly',
+            'recurrence_count' => 'nullable|integer|min:1|max:52',
         ]);
 
         $field = Field::findOrFail($data['field_id']);
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
         $price = $field->price_per_hour * $hours;
 
-        $reservation = Reservation::create([
+        $reservations = Reservation::createWithRecurrence([
             'field_id' => $field->id,
             'user_id' => Auth::id(),
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
             'price' => $price,
             'status' => 'confirmed',
+            'recurrence_interval' => $data['recurrence_interval'] ?? null,
+            'recurrence_count' => $data['recurrence_count'] ?? 1,
         ]);
 
-        SendReservationReminder::dispatch($reservation)
-            ->delay($reservation->start_time->subHour());
+        foreach ($reservations as $reservation) {
+            SendReservationReminder::dispatch($reservation)
+                ->delay($reservation->start_time->subHour());
+        }
 
-        return response()->json($reservation, 201);
+        return response()->json($reservations[0], 201);
     }
 
     /**
@@ -165,11 +171,7 @@ class ReservationController extends Controller
         $reservation->status = 'cancelled';
         $reservation->save();
 
-        SendPushNotification::dispatch(
-            $reservation->user,
-            'Reserva cancelada',
-            'Tu reserva fue cancelada'
-        );
+        NotifyWaitlist::dispatch($reservation);
 
         return response()->json($reservation);
     }
