@@ -9,6 +9,7 @@ use App\Jobs\SendReservationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
+use App\Services\WeatherService;
 
 class ReservationController extends Controller
 {
@@ -24,7 +25,7 @@ class ReservationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WeatherService $weatherService)
     {
         $data = $request->validate([
             'field_id' => 'required|exists:fields,id',
@@ -32,9 +33,19 @@ class ReservationController extends Controller
             'end_time' => 'required|date|after:start_time',
         ]);
 
-        $field = Field::findOrFail($data['field_id']);
+        $field = Field::with('club')->findOrFail($data['field_id']);
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
         $price = $field->price_per_hour * $hours;
+
+        $alert = null;
+        if ($field->club && $field->club->latitude && $field->club->longitude) {
+            $alert = $weatherService->getAlert(
+                $field->club->latitude,
+                $field->club->longitude,
+                $data['start_time'],
+                $data['end_time']
+            );
+        }
 
         $reservation = Reservation::create([
             'field_id' => $field->id,
@@ -43,6 +54,7 @@ class ReservationController extends Controller
             'end_time' => $data['end_time'],
             'price' => $price,
             'status' => 'confirmed',
+            'weather_alert' => $alert,
         ]);
 
         SendReservationReminder::dispatch($reservation)
@@ -88,7 +100,7 @@ class ReservationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Reservation $reservation)
+    public function update(Request $request, Reservation $reservation, WeatherService $weatherService)
     {
         if ($reservation->user_id !== Auth::id()) {
             abort(403);
@@ -99,13 +111,24 @@ class ReservationController extends Controller
             'end_time' => 'required|date|after:start_time',
         ]);
 
-        $field = $reservation->field;
+        $field = $reservation->field()->with('club')->first();
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
         $price = $field->price_per_hour * $hours;
+
+        $alert = null;
+        if ($field->club && $field->club->latitude && $field->club->longitude) {
+            $alert = $weatherService->getAlert(
+                $field->club->latitude,
+                $field->club->longitude,
+                $data['start_time'],
+                $data['end_time']
+            );
+        }
 
         $reservation->start_time = $data['start_time'];
         $reservation->end_time = $data['end_time'];
         $reservation->price = $price;
+        $reservation->weather_alert = $alert;
         $reservation->save();
 
         return response()->json($reservation);

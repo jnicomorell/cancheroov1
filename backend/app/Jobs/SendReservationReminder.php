@@ -9,6 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use App\Services\WeatherService;
 
 class SendReservationReminder implements ShouldQueue
 {
@@ -18,7 +19,7 @@ class SendReservationReminder implements ShouldQueue
     {
     }
 
-    public function handle(): void
+    public function handle(WeatherService $weatherService): void
     {
         $reservation = $this->reservation->fresh(['user', 'field.club']);
         if (! $reservation || ! $reservation->user->fcm_token) {
@@ -30,18 +31,24 @@ class SendReservationReminder implements ShouldQueue
             ' a las ' . $reservation->start_time->format('H:i');
 
         if ($club->latitude && $club->longitude) {
-            $response = Http::get('https://api.open-meteo.com/v1/forecast', [
-                'latitude' => $club->latitude,
-                'longitude' => $club->longitude,
-                'hourly' => 'precipitation',
-                'start' => $reservation->start_time->subHour()->toIso8601String(),
-                'end' => $reservation->end_time->toIso8601String(),
-            ]);
-            if ($response->ok()) {
-                $precip = $response->json('hourly.precipitation.0');
-                if ($precip > 0) {
-                    $message .= '. Se esperan precipitaciones';
-                }
+            $prev = $reservation->weather_alert;
+            $alert = $weatherService->getAlert(
+                $club->latitude,
+                $club->longitude,
+                $reservation->start_time,
+                $reservation->end_time
+            );
+
+            $changed = $alert !== $prev;
+            if ($changed) {
+                $reservation->weather_alert = $alert;
+                $reservation->save();
+            }
+
+            if ($alert) {
+                $message .= $changed ? '. Pronóstico actualizado: ' . $alert : '. ' . $alert;
+            } elseif ($changed) {
+                $message .= '. Pronóstico actualizado: sin alertas';
             }
         }
 

@@ -17,6 +17,7 @@ class Reservation extends Model
         'price',
         'status',
         'payment_status',
+        'weather_alert',
     ];
 
     protected $casts = [
