@@ -10,6 +10,7 @@ import FieldListScreen from './screens/FieldListScreen';
 import FieldDetailScreen from './screens/FieldDetailScreen';
 import ReservationsScreen from './screens/ReservationsScreen';
 import FiltersScreen from './screens/FiltersScreen';
+import FieldMapScreen from './screens/FieldMapScreen';
 
 const RootStack = createNativeStackNavigator();
 const FieldsStack = createNativeStackNavigator();
@@ -22,6 +23,7 @@ function FieldsStackScreen() {
       <FieldsStack.Screen name="Fields" component={FieldListScreen} options={{ title: 'Canchas' }} />
       <FieldsStack.Screen name="FieldDetail" component={FieldDetailScreen} options={{ title: 'Detalle' }} />
       <FieldsStack.Screen name="Filters" component={FiltersScreen} options={{ title: 'Filtros' }} />
+      <FieldsStack.Screen name="FieldMap" component={FieldMapScreen} options={{ title: 'Mapa' }} />
     </FieldsStack.Navigator>
   );
 }
