@@ -19,6 +19,8 @@ class FieldController extends Controller
 
         $this->applyFilters($fields, $request);
 
+        $this->applyFilters($fields, $request);
+
         return response()->json($fields->paginate());
     }
 

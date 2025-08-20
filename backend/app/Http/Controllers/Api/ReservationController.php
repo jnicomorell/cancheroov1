@@ -184,4 +184,29 @@ class ReservationController extends Controller
 
         return response()->json($reservation);
     }
+
+    public function invite(Request $request, Reservation $reservation)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'nullable|numeric',
+        ]);
+
+        $reservation->participants()->attach($data['user_id'], ['amount' => $data['amount'] ?? 0]);
+
+        return response()->json(['message' => 'Invitation sent']);
+    }
+
+    public function confirm(Reservation $reservation)
+    {
+        if (! $reservation->participants()->wherePivot('user_id', Auth::id())->exists()) {
+            abort(403);
+        }
+
+        return response()->json(['message' => 'Participation confirmed']);
+    }
 }
