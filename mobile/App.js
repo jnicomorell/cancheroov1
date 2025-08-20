@@ -24,7 +24,6 @@ export default function App() {
         )}
         ListEmptyComponent={<Text>No hay canchas</Text>}
       />
-
     </View>
   );
 }
