@@ -13,7 +13,9 @@ class FieldController extends Controller
      */
     public function index(Request $request)
     {
-        $fields = Field::query()->with('club');
+        $fields = Field::query()
+            ->with('club')
+            ->withAvg('reviews as average_rating', 'rating');
 
         if ($request->filled('sport')) {
             $fields->where('sport', $request->sport);
@@ -62,7 +64,8 @@ class FieldController extends Controller
      */
     public function show(Field $field)
     {
-        $field->load('club');
+        $field->load('club')
+            ->loadAvg('reviews as average_rating', 'rating');
         return response()->json($field);
     }
 
