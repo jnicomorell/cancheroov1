@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
 class Reservation extends Model
@@ -40,6 +41,11 @@ class Reservation extends Model
         return $this->belongsToMany(User::class, 'reservation_participants')
             ->withPivot('amount')
             ->withTimestamps();
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ReservationItem::class);
     }
 
     public static function createPeriodic(array $data, int $count): array

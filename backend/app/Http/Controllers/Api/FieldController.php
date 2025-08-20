@@ -125,7 +125,7 @@ class FieldController extends Controller
      */
     public function show(Field $field)
     {
-        $field->load('club')
+        $field->load('club', 'rentalItems')
             ->loadAvg('reviews as average_rating', 'rating');
         return response()->json($field);
     }
