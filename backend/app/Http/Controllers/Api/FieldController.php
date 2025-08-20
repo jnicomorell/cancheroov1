@@ -14,7 +14,30 @@ class FieldController extends Controller
     public function index(Request $request)
     {
         $fields = Field::query()->with('club');
+        $this->applyFilters($fields, $request);
 
+        return response()->json($fields->paginate());
+    }
+
+    public function map(Request $request)
+    {
+        $fields = Field::query()->with('club');
+        $this->applyFilters($fields, $request);
+
+        $data = $fields->get()->map(function ($field) {
+            return [
+                'id' => $field->id,
+                'name' => $field->name,
+                'latitude' => $field->latitude ?? optional($field->club)->latitude,
+                'longitude' => $field->longitude ?? optional($field->club)->longitude,
+            ];
+        });
+
+        return response()->json($data);
+    }
+
+    private function applyFilters($fields, Request $request): void
+    {
         if ($request->filled('sport')) {
             $fields->where('sport', $request->sport);
         }
@@ -25,6 +48,43 @@ class FieldController extends Controller
             });
         }
 
+        if ($request->filled('surface')) {
+            $fields->where('surface', $request->surface);
+        }
+
+        if ($request->filled('is_indoor')) {
+            $fields->where('is_indoor', filter_var($request->is_indoor, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->filled('min_price')) {
+            $fields->where('price_per_hour', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $fields->where('price_per_hour', '<=', $request->max_price);
+        }
+
+        if ($request->filled('features')) {
+            $features = is_array($request->features)
+                ? $request->features
+                : explode(',', $request->features);
+            foreach ($features as $feature) {
+                $fields->whereJsonContains('features', $feature);
+            }
+        }
+
+        if ($request->filled(['latitude', 'longitude', 'radius'])) {
+            $lat = $request->latitude;
+            $lng = $request->longitude;
+            $radius = $request->radius; // kilometers
+            $haversine = "(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))";
+
+            $fields->select('*')
+                ->selectRaw("$haversine AS distance", [$lat, $lng, $lat])
+                ->having('distance', '<=', $radius)
+                ->orderBy('distance');
+        }
+
         if ($request->filled(['start_time', 'end_time'])) {
             $fields->whereDoesntHave('reservations', function ($q) use ($request) {
                 $q->where(function ($query) use ($request) {
@@ -33,8 +93,6 @@ class FieldController extends Controller
                 });
             });
         }
-
-        return response()->json($fields->paginate());
     }
 
     /**
@@ -50,6 +108,8 @@ class FieldController extends Controller
             'sport' => 'required|in:futbol,padel',
             'surface' => 'nullable|string',
             'is_indoor' => 'boolean',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'price_per_hour' => 'required|numeric',
             'features' => 'array',
         ]);
