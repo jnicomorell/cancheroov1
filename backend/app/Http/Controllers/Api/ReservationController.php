@@ -7,6 +7,7 @@ use App\Models\Field;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PaymentService;
 
 class ReservationController extends Controller
 {
@@ -78,6 +79,17 @@ class ReservationController extends Controller
 
         $reservation->status = 'cancelled';
         $reservation->save();
+
+        return response()->json($reservation);
+    }
+
+    public function pay(Reservation $reservation, PaymentService $paymentService)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $paymentService->payReservation($reservation);
 
         return response()->json($reservation);
     }

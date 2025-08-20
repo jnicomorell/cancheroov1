@@ -14,13 +14,13 @@ class Reservation extends Model
         'end_time',
         'price',
         'status',
-        'paid',
+        'payment_status',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
-        'paid' => 'boolean',
+        'payment_status' => 'string',
     ];
 
     public function field(): BelongsTo
