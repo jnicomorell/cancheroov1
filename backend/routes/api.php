@@ -9,8 +9,11 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/fields', [FieldController::class, 'index']);
-Route::post('/fields', [FieldController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/fields/{field}', [FieldController::class, 'show']);
+
+Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function () {
+    Route::post('/fields', [FieldController::class, 'store']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);

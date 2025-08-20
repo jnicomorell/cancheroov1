@@ -42,6 +42,8 @@ class FieldController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Field::class);
+
         $data = $request->validate([
             'club_id' => 'required|exists:clubs,id',
             'name' => 'required|string',
