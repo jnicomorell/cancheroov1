@@ -39,4 +39,8 @@ return [
         'key' => env('FCM_SERVER_KEY'),
     ],
 
+    'mercadopago' => [
+        'token' => env('MERCADOPAGO_TOKEN'),
+    ],
+
 ];
