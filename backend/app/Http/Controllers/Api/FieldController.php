@@ -13,9 +13,9 @@ class FieldController extends Controller
      */
     public function index(Request $request)
     {
-        $fields = Field::query()
-            ->with('club')
-            ->withAvg('reviews as average_rating', 'rating');
+        $fields = Field::query()->with('club');
+        $this->applyFilters($fields, $request);
+        $fields->withAvg('reviews as average_rating', 'rating');
 
         $this->applyFilters($fields, $request);
 
