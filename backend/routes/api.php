@@ -27,10 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
+    Route::get('/reservations/{reservation}/ics', [ReservationController::class, 'ics']);
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update']);
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']);
     Route::post('/reservations/{reservation}/pay', [ReservationController::class, 'pay']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+    Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
 });
