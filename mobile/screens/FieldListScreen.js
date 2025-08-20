@@ -23,10 +23,16 @@ export default function FieldListScreen({ navigation, route }) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          title="Filtros"
-          onPress={() => navigation.navigate('Filters', { sport, city })}
-        />
+        <View style={{ flexDirection: 'row' }}>
+          <Button
+            title="Mapa"
+            onPress={() => navigation.navigate('FieldMap', { sport, city })}
+          />
+          <Button
+            title="Filtros"
+            onPress={() => navigation.navigate('Filters', { sport, city })}
+          />
+        </View>
       ),
     });
   }, [navigation, sport, city]);
@@ -38,7 +44,9 @@ export default function FieldListScreen({ navigation, route }) {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate('FieldDetail', { id: item.id })}>
-            <Text>{item.name} - {item.sport}</Text>
+            <Text>
+              {item.name} - {item.sport} - Promedio: {item.average_rating ? item.average_rating.toFixed(1) : 'N/A'}
+            </Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={<Text>No hay canchas</Text>}
