@@ -1,15 +1,17 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useSettings } from '../src/context/SettingsContext';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
+  const { t, language } = useSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
-    fetch('http://localhost:8000/api/login', {
+    fetch(`http://localhost:8000/api/login?lang=${language}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -19,17 +21,17 @@ export default function LoginScreen({ navigation }) {
         if (json.token) {
           login(json.token);
         } else {
-          setError('Credenciales inválidas');
+          setError(t('invalid_credentials'));
         }
       })
-      .catch(() => setError('Error de conexión'));
+      .catch(() => setError(t('connection_error')));
   };
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <Text style={{ fontSize: 24, marginBottom: 16 }}>Ingresar</Text>
+      <Text style={{ fontSize: 24, marginBottom: 16 }}>{t('login_title')}</Text>
       <TextInput
-        placeholder="Email"
+        placeholder={t('email')}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -37,17 +39,17 @@ export default function LoginScreen({ navigation }) {
         style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
       />
       <TextInput
-        placeholder="Contraseña"
+        placeholder={t('password')}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
       />
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-      <Button title="Entrar" onPress={handleLogin} />
+      <Button title={t('login_button')} onPress={handleLogin} />
       <View style={{ marginTop: 16 }}>
         <Button
-          title="Crear cuenta"
+          title={t('create_account')}
           onPress={() => navigation.navigate('Register')}
         />
       </View>

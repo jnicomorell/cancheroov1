@@ -1,13 +1,15 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, FlatList, Button, Alert } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useSettings } from '../src/context/SettingsContext';
 
 export default function ReservationsScreen() {
   const { token } = useContext(AuthContext);
+  const { t, language, currency } = useSettings();
   const [reservations, setReservations] = useState([]);
 
   const loadReservations = () => {
-    fetch('http://localhost:8000/api/reservations', {
+    fetch(`http://localhost:8000/api/reservations?lang=${language}&currency=${currency}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -17,19 +19,19 @@ export default function ReservationsScreen() {
 
   useEffect(() => {
     loadReservations();
-  }, []);
+  }, [language, currency]);
 
   const cancelReservation = (id) => {
-    fetch(`http://localhost:8000/api/reservations/${id}`, {
+    fetch(`http://localhost:8000/api/reservations/${id}?lang=${language}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then(() => {
-        Alert.alert('Reserva cancelada');
+        Alert.alert(t('reservation_cancelled'));
         loadReservations();
       })
-      .catch(() => Alert.alert('No se pudo cancelar'));
+      .catch(() => Alert.alert(t('cancel_failed')));
   };
 
   return (
@@ -39,13 +41,13 @@ export default function ReservationsScreen() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={{ marginBottom: 12 }}>
-            <Text>{item.field.name} - {item.start_time}</Text>
+            <Text>{item.field.name} - {item.start_time} - {item.price} {currency}</Text>
             {item.status === 'confirmed' && (
-              <Button title="Cancelar" onPress={() => cancelReservation(item.id)} />
+              <Button title={t('cancel')} onPress={() => cancelReservation(item.id)} />
             )}
           </View>
         )}
-        ListEmptyComponent={<Text>No hay reservas</Text>}
+        ListEmptyComponent={<Text>{t('no_reservations')}</Text>}
       />
     </View>
   );

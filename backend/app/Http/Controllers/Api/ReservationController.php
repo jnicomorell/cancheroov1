@@ -9,23 +9,40 @@ use App\Jobs\SendReservationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
+use App\Services\CurrencyService;
 
 class ReservationController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, CurrencyService $currencyService)
     {
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
+        }
+        $currency = $request->query('currency');
+
         $reservations = Auth::user()->reservations()->with('field.club')->get();
+        if ($currency) {
+            $reservations->transform(function ($reservation) use ($currencyService, $currency) {
+                $reservation->price = $currencyService->convert($reservation->price, $currency);
+                return $reservation;
+            });
+        }
         return response()->json($reservations);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, CurrencyService $currencyService)
     {
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
+        }
+        $currency = $request->query('currency');
+
         $data = $request->validate([
             'field_id' => 'required|exists:fields,id',
             'start_time' => 'required|date',
@@ -48,26 +65,39 @@ class ReservationController extends Controller
         SendReservationReminder::dispatch($reservation)
             ->delay($reservation->start_time->subHour());
 
+        if ($currency) {
+            $reservation->price = $currencyService->convert($reservation->price, $currency);
+        }
+
         return response()->json($reservation, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Reservation $reservation)
+    public function show(Request $request, Reservation $reservation, CurrencyService $currencyService)
     {
         if ($reservation->user_id !== Auth::id()) {
             abort(403);
         }
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
+        }
 
         $reservation->load('field.club');
+        if ($currency = $request->query('currency')) {
+            $reservation->price = $currencyService->convert($reservation->price, $currency);
+        }
         return response()->json($reservation);
     }
 
-    public function ics(Reservation $reservation)
+    public function ics(Request $request, Reservation $reservation)
     {
         if ($reservation->user_id !== Auth::id()) {
             abort(403);
+        }
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
         }
 
         $reservation->load('field.club');
@@ -76,7 +106,7 @@ class ReservationController extends Controller
             'DTSTAMP:' . $reservation->created_at->utc()->format('Ymd\THis\Z') . "\r\n" .
             'DTSTART:' . $reservation->start_time->utc()->format('Ymd\THis\Z') . "\r\n" .
             'DTEND:' . $reservation->end_time->utc()->format('Ymd\THis\Z') . "\r\n" .
-            'SUMMARY:Partido en ' . $reservation->field->name . "\r\n" .
+            'SUMMARY:' . __('reservation.ics_summary', ['field' => $reservation->field->name]) . "\r\n" .
             'LOCATION:' . $reservation->field->club->address . "\r\nEND:VEVENT\r\nEND:VCALENDAR";
 
         return response($ics, 200, [
@@ -88,10 +118,13 @@ class ReservationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Reservation $reservation)
+    public function update(Request $request, Reservation $reservation, CurrencyService $currencyService)
     {
         if ($reservation->user_id !== Auth::id()) {
             abort(403);
+        }
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
         }
 
         $data = $request->validate([
@@ -107,6 +140,10 @@ class ReservationController extends Controller
         $reservation->end_time = $data['end_time'];
         $reservation->price = $price;
         $reservation->save();
+
+        if ($currency = $request->query('currency')) {
+            $reservation->price = $currencyService->convert($reservation->price, $currency);
+        }
 
         return response()->json($reservation);
     }
@@ -137,3 +174,4 @@ class ReservationController extends Controller
         return response()->json($reservation);
     }
 }
+
