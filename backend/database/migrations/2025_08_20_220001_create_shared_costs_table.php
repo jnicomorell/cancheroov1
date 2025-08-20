@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clubs', function (Blueprint $table) {
+        Schema::create('reservation_shared_costs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('reservation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->string('address');
-            $table->string('city');
-            $table->decimal('latitude', 10, 7)->nullable()->index();
-            $table->decimal('longitude', 10, 7)->nullable()->index();
+            $table->decimal('amount', 8, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clubs');
+        Schema::dropIfExists('reservation_shared_costs');
     }
 };

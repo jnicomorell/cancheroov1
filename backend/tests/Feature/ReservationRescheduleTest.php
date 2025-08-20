@@ -34,7 +34,7 @@ class ReservationRescheduleTest extends TestCase
             'end_time' => '2025-08-21 11:00:00',
             'price' => 100,
             'status' => 'confirmed',
-            'paid' => false,
+            'payment_status' => 'pending',
         ]);
 
         $token = $user->createToken('test')->plainTextToken;
@@ -79,7 +79,7 @@ class ReservationRescheduleTest extends TestCase
             'end_time' => '2025-08-21 11:00:00',
             'price' => 100,
             'status' => 'confirmed',
-            'paid' => false,
+            'payment_status' => 'pending',
         ]);
 
         $token = $user->createToken('test')->plainTextToken;
