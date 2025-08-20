@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
 use App\Jobs\SendReservationReminder;
+use App\Jobs\SendPushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
@@ -108,6 +109,12 @@ class ReservationController extends Controller
         $reservation->price = $price;
         $reservation->save();
 
+        SendPushNotification::dispatch(
+            $reservation->user,
+            'Reserva actualizada',
+            'Tu reserva fue modificada'
+        );
+
         return response()->json($reservation);
     }
 
@@ -122,6 +129,12 @@ class ReservationController extends Controller
 
         $reservation->status = 'cancelled';
         $reservation->save();
+
+        SendPushNotification::dispatch(
+            $reservation->user,
+            'Reserva cancelada',
+            'Tu reserva fue cancelada'
+        );
 
         return response()->json($reservation);
     }
