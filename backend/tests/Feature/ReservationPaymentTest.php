@@ -6,39 +6,29 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\{User, Club, Field, Reservation};
 
-class FieldAvailabilityTest extends TestCase
+class ReservationPaymentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_filters_fields_by_availability(): void
+    public function test_user_can_pay_reservation(): void
     {
         $user = User::factory()->create();
-
         $club = Club::create([
             'user_id' => $user->id,
-            'name' => 'Club A',
+            'name' => 'Club',
             'address' => 'Addr',
             'city' => 'City',
             'latitude' => 0,
             'longitude' => 0,
         ]);
-
-        $field1 = Field::create([
+        $field = Field::create([
             'club_id' => $club->id,
-            'name' => 'Field 1',
+            'name' => 'Field',
             'sport' => 'futbol',
             'price_per_hour' => 100,
         ]);
-
-        $field2 = Field::create([
-            'club_id' => $club->id,
-            'name' => 'Field 2',
-            'sport' => 'futbol',
-            'price_per_hour' => 100,
-        ]);
-
-        Reservation::create([
-            'field_id' => $field1->id,
+        $reservation = Reservation::create([
+            'field_id' => $field->id,
             'user_id' => $user->id,
             'start_time' => '2025-08-21 10:00:00',
             'end_time' => '2025-08-21 11:00:00',
@@ -47,11 +37,15 @@ class FieldAvailabilityTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
-        $response = $this->getJson('/api/fields?start_time=2025-08-21%2010:00:00&end_time=2025-08-21%2011:00:00');
+        $token = $user->createToken('test')->plainTextToken;
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/reservations/'.$reservation->id.'/pay');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(1, 'data');
-        $response->assertJsonFragment(['id' => $field2->id]);
-        $this->assertFalse(collect($response->json('data'))->pluck('id')->contains($field1->id));
+        $response->assertJsonFragment(['payment_status' => 'paid']);
+        $this->assertDatabaseHas('reservations', [
+            'id' => $reservation->id,
+            'payment_status' => 'paid',
+        ]);
     }
 }
