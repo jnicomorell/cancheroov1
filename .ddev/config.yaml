@@ -1,0 +1,7 @@
+name: cancheroo
+# Use Laravel project type so common settings are preconfigured
+type: laravel
+# The Laravel app lives in the backend/ directory
+# and its public webroot is backend/public
+docroot: backend/public
+php_version: "8.2"
