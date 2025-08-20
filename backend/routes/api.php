@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\UserController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,6 +19,13 @@ Route::get('/fields/{field}', [FieldController::class, 'show']);
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+
+Route::get('/chats', [ChatController::class, 'index']);
+Route::get('/chats/{chat}', [ChatController::class, 'show']);
+Route::get('/chats/{chat}/messages', [MessageController::class, 'index']);
+Route::post('/chats/{chat}/messages', [MessageController::class, 'store']);
+
+Route::get('/ranking', [UserController::class, 'ranking']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);
