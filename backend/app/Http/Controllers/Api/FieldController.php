@@ -25,6 +25,15 @@ class FieldController extends Controller
             });
         }
 
+        if ($request->filled(['start_time', 'end_time'])) {
+            $fields->whereDoesntHave('reservations', function ($q) use ($request) {
+                $q->where(function ($query) use ($request) {
+                    $query->where('start_time', '<', $request->end_time)
+                        ->where('end_time', '>', $request->start_time);
+                });
+            });
+        }
+
         return response()->json($fields->paginate());
     }
 

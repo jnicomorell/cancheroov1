@@ -10,7 +10,7 @@ Cancheroo es una plataforma para reserva de canchas de fútbol y pádel.
 ## Características iniciales
 
 - Gestión de clubes, canchas y reservas.
-- Búsqueda de canchas por deporte y ciudad.
+- Búsqueda de canchas por deporte, ciudad y disponibilidad horaria.
 - Creación de reservas con cálculo automático de precio.
 
 ## Desarrollo
