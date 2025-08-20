@@ -1,29 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import FieldListScreen from './screens/FieldListScreen';
+import FieldDetailScreen from './screens/FieldDetailScreen';
+import ReservationsScreen from './screens/ReservationsScreen';
+import FiltersScreen from './screens/FiltersScreen';
+
+const RootStack = createNativeStackNavigator();
+const FieldsStack = createNativeStackNavigator();
+const ReservationsStack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function FieldsStackScreen() {
+  return (
+    <FieldsStack.Navigator>
+      <FieldsStack.Screen name="Fields" component={FieldListScreen} options={{ title: 'Canchas' }} />
+      <FieldsStack.Screen name="FieldDetail" component={FieldDetailScreen} options={{ title: 'Detalle' }} />
+      <FieldsStack.Screen name="Filters" component={FiltersScreen} options={{ title: 'Filtros' }} />
+    </FieldsStack.Navigator>
+  );
+}
+
+function ReservationsStackScreen() {
+  return (
+    <ReservationsStack.Navigator>
+      <ReservationsStack.Screen name="Reservations" component={ReservationsScreen} options={{ title: 'Reservas' }} />
+    </ReservationsStack.Navigator>
+  );
+}
+
+function AppTabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Canchas" component={FieldsStackScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Mis reservas" component={ReservationsStackScreen} options={{ headerShown: false }} />
+    </Tab.Navigator>
+  );
+}
+
+function RootNavigator() {
+  const { token, loading } = useContext(AuthContext);
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {token ? (
+        <RootStack.Screen name="App" component={AppTabs} />
+      ) : (
+        <>
+          <RootStack.Screen name="Login" component={LoginScreen} />
+          <RootStack.Screen name="Register" component={RegisterScreen} />
+        </>
+      )}
+    </RootStack.Navigator>
+  );
+}
 
 export default function App() {
-  const [reservations, setReservations] = useState([]);
-
-  useEffect(() => {
-    fetch('http://localhost:8000/api/reservations')
-      .then((res) => res.json())
-      .then((json) => setReservations(json || []))
-      .catch((err) => console.log(err));
-  }, []);
-
   return (
-    <View style={{ flex: 1, paddingTop: 50, paddingHorizontal: 16 }}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 12 }}>
-        Mis reservas
-      </Text>
-      <FlatList
-        data={reservations}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Text>{item.field?.name} - {item.payment_status}</Text>
-        )}
-        ListEmptyComponent={<Text>No hay reservas</Text>}
-      />
-    </View>
+    <AuthProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
