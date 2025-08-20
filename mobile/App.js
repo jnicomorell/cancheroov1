@@ -10,6 +10,7 @@ import FieldListScreen from './screens/FieldListScreen';
 import FieldDetailScreen from './screens/FieldDetailScreen';
 import ReservationsScreen from './screens/ReservationsScreen';
 import FiltersScreen from './screens/FiltersScreen';
+import LoyaltyScreen from './screens/LoyaltyScreen';
 
 const RootStack = createNativeStackNavigator();
 const FieldsStack = createNativeStackNavigator();
@@ -39,6 +40,7 @@ function AppTabs() {
     <Tab.Navigator>
       <Tab.Screen name="Canchas" component={FieldsStackScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Mis reservas" component={ReservationsStackScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Promos" component={LoyaltyScreen} />
     </Tab.Navigator>
   );
 }

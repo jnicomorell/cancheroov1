@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\LoyaltyController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,6 +18,7 @@ Route::get('/fields/{field}', [FieldController::class, 'show']);
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+Route::get('/promotions', [PromotionController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);
@@ -26,4 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+    Route::get('/loyalty/balance', [LoyaltyController::class, 'balance']);
+    Route::post('/loyalty/redeem', [LoyaltyController::class, 'redeem']);
 });

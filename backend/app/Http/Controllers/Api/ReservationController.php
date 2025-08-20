@@ -9,6 +9,7 @@ use App\Jobs\SendReservationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
+use App\Models\LoyaltyPoint;
 
 class ReservationController extends Controller
 {
@@ -47,6 +48,15 @@ class ReservationController extends Controller
 
         SendReservationReminder::dispatch($reservation)
             ->delay($reservation->start_time->subHour());
+
+        $points = (int) floor($price / 10);
+        if ($points > 0) {
+            LoyaltyPoint::create([
+                'user_id' => Auth::id(),
+                'points' => $points,
+                'description' => 'Reserva campo: ' . $field->name,
+            ]);
+        }
 
         return response()->json($reservation, 201);
     }
