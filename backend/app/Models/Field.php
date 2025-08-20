@@ -14,6 +14,8 @@ class Field extends Model
         'sport',
         'surface',
         'is_indoor',
+        'latitude',
+        'longitude',
         'price_per_hour',
         'features',
     ];
@@ -21,6 +23,8 @@ class Field extends Model
     protected $casts = [
         'is_indoor' => 'boolean',
         'features' => 'array',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function club(): BelongsTo
@@ -31,5 +35,10 @@ class Field extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }

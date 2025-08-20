@@ -18,6 +18,8 @@ return new class extends Migration
             $table->enum('sport', ['futbol', 'padel']);
             $table->string('surface')->nullable();
             $table->boolean('is_indoor')->default(false);
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
             $table->decimal('price_per_hour', 8, 2);
             $table->json('features')->nullable();
             $table->timestamps();

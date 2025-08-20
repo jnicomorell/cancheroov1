@@ -48,4 +48,16 @@ class AuthController extends Controller
 
         return response()->json(['token' => $token]);
     }
+
+    public function updateFcmToken(Request $request)
+    {
+        $data = $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $user->update(['fcm_token' => $data['fcm_token']]);
+
+        return response()->json(['status' => 'ok']);
+    }
 }
