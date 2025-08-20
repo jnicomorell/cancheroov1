@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\PriceController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ReportController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -12,6 +16,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/fields', [FieldController::class, 'index']);
 Route::get('/fields/map', [FieldController::class, 'map']);
 Route::post('/fields', [FieldController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/fields/{field}', [FieldController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->middleware('auth:sanctum');
 Route::get('/fields/{field}', [FieldController::class, 'show']);
 Route::put('/fields/{field}', [FieldController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->middleware('auth:sanctum');
@@ -30,4 +36,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+    Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
+});
+
+Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    Route::apiResource('schedules', ScheduleController::class);
+    Route::apiResource('prices', PriceController::class);
+    Route::apiResource('payments', PaymentController::class);
+    Route::get('reports/reservations', [ReportController::class, 'reservations']);
+    Route::get('reports/income', [ReportController::class, 'income']);
 });

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
 class Reservation extends Model
@@ -41,6 +42,7 @@ class Reservation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'reservation_participants')
+            ->using(ReservationParticipant::class)
             ->withPivot('amount')
             ->withTimestamps();
     }
