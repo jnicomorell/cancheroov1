@@ -100,6 +100,8 @@ class FieldController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Field::class);
+
         $data = $request->validate([
             'club_id' => 'required|exists:clubs,id',
             'name' => 'required|string',
@@ -129,16 +131,30 @@ class FieldController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Field $field)
     {
-        //
+        $data = $request->validate([
+            'club_id' => 'sometimes|exists:clubs,id',
+            'name' => 'sometimes|string',
+            'sport' => 'sometimes|in:futbol,padel',
+            'surface' => 'nullable|string',
+            'is_indoor' => 'boolean',
+            'price_per_hour' => 'sometimes|numeric',
+            'features' => 'array',
+        ]);
+
+        $field->update($data);
+
+        return response()->json($field);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Field $field)
     {
-        //
+        $field->delete();
+
+        return response()->json(null, 204);
     }
 }
