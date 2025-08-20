@@ -13,6 +13,9 @@ Route::get('/fields/{field}', [FieldController::class, 'show']);
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function () {
     Route::post('/fields', [FieldController::class, 'store']);
+    Route::put('/fields/{field}', [FieldController::class, 'update']);
+    Route::patch('/fields/{field}', [FieldController::class, 'update']);
+    Route::delete('/fields/{field}', [FieldController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
