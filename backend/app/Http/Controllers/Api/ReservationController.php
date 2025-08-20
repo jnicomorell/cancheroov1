@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
+use App\Jobs\SendReservationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,6 +44,9 @@ class ReservationController extends Controller
             'status' => 'confirmed',
         ]);
 
+        SendReservationReminder::dispatch($reservation)
+            ->delay($reservation->start_time->subHour());
+
         return response()->json($reservation, 201);
     }
 
@@ -57,6 +61,27 @@ class ReservationController extends Controller
 
         $reservation->load('field.club');
         return response()->json($reservation);
+    }
+
+    public function ics(Reservation $reservation)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $reservation->load('field.club');
+        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\n" .
+            'UID:reservation-' . $reservation->id . "@canchero\r\n" .
+            'DTSTAMP:' . $reservation->created_at->utc()->format('Ymd\THis\Z') . "\r\n" .
+            'DTSTART:' . $reservation->start_time->utc()->format('Ymd\THis\Z') . "\r\n" .
+            'DTEND:' . $reservation->end_time->utc()->format('Ymd\THis\Z') . "\r\n" .
+            'SUMMARY:Partido en ' . $reservation->field->name . "\r\n" .
+            'LOCATION:' . $reservation->field->club->address . "\r\nEND:VEVENT\r\nEND:VCALENDAR";
+
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="reservation-' . $reservation->id . '.ics"',
+        ]);
     }
 
     /**

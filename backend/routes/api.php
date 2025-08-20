@@ -17,4 +17,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']);
+    Route::get('/reservations/{reservation}/ics', [ReservationController::class, 'ics']);
+    Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
 });
