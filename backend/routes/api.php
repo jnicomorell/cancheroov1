@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\PriceController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ReportController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,4 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+});
+
+Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    Route::apiResource('schedules', ScheduleController::class);
+    Route::apiResource('prices', PriceController::class);
+    Route::apiResource('payments', PaymentController::class);
+    Route::get('reports/reservations', [ReportController::class, 'reservations']);
+    Route::get('reports/income', [ReportController::class, 'income']);
 });
