@@ -12,13 +12,11 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/fields', [FieldController::class, 'index']);
 Route::get('/fields/map', [FieldController::class, 'map']);
-Route::post('/fields', [FieldController::class, 'store'])
-    ->middleware(['auth:sanctum', 'can:create,' . Field::class]);
+Route::post('/fields', [FieldController::class, 'store'])->middleware(['auth:sanctum','role:admin,superadmin']);
 Route::get('/fields/{field}', [FieldController::class, 'show']);
-Route::put('/fields/{field}', [FieldController::class, 'update'])
-    ->middleware(['auth:sanctum', 'can:update,field']);
-Route::delete('/fields/{field}', [FieldController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'can:delete,field']);
+Route::put('/fields/{field}', [FieldController::class, 'update'])->middleware(['auth:sanctum','role:admin,superadmin']);
+Route::patch('/fields/{field}', [FieldController::class, 'update'])->middleware(['auth:sanctum','role:admin,superadmin']);
+Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->middleware(['auth:sanctum','role:admin,superadmin']);
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::get('/reviews/{review}', [ReviewController::class, 'show']);
