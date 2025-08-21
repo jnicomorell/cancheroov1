@@ -41,4 +41,9 @@ class Field extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function rentalItems(): HasMany
+    {
+        return $this->hasMany(RentalItem::class);
+    }
 }

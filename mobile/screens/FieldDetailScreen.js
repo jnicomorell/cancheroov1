@@ -6,6 +6,7 @@ export default function FieldDetailScreen({ route }) {
   const { id } = route.params;
   const { token } = useContext(AuthContext);
   const [field, setField] = useState(null);
+  const [selectedExtras, setSelectedExtras] = useState([]);
 
   useEffect(() => {
     fetch(`http://localhost:8000/api/fields/${id}`)
@@ -13,6 +14,19 @@ export default function FieldDetailScreen({ route }) {
       .then(setField)
       .catch((err) => console.log(err));
   }, [id]);
+
+  const toggleExtra = (itemId) => {
+    setSelectedExtras((prev) =>
+      prev.includes(itemId) ? prev.filter((i) => i !== itemId) : [...prev, itemId]
+    );
+  };
+
+  const extrasTotal =
+    field?.rental_items?.reduce(
+      (sum, item) =>
+        selectedExtras.includes(item.id) ? sum + item.price : sum,
+      0
+    ) || 0;
 
   const handleReserve = () => {
     const now = new Date();
@@ -27,6 +41,10 @@ export default function FieldDetailScreen({ route }) {
         field_id: id,
         start_time: now.toISOString(),
         end_time: end.toISOString(),
+        items: selectedExtras.map((itemId) => ({
+          rental_item_id: itemId,
+          quantity: 1,
+        })),
       }),
     })
       .then((res) => res.json())
@@ -51,10 +69,25 @@ export default function FieldDetailScreen({ route }) {
       <Text style={{ fontSize: 24, marginBottom: 8 }}>{field.name}</Text>
       <Text>Deporte: {field.sport}</Text>
       <Text>Precio: ${field.price_per_hour} / hora</Text>
-      <Text>
-        Promedio de calificaciones: {field.average_rating ? field.average_rating.toFixed(1) : 'N/A'}
-      </Text>
+      {field.rental_items && field.rental_items.length > 0 && (
+        <View style={{ marginVertical: 20 }}>
+          <Text>Extras:</Text>
+          {field.rental_items.map((item) => (
+            <View key={item.id} style={{ marginVertical: 4 }}>
+              <Button
+                title={
+                  selectedExtras.includes(item.id)
+                    ? `Quitar ${item.name} ($${item.price})`
+                    : `Agregar ${item.name} ($${item.price})`
+                }
+                onPress={() => toggleExtra(item.id)}
+              />
+            </View>
+          ))}
+        </View>
+      )}
       <View style={{ marginVertical: 20 }}>
+        <Text>Precio total: ${field.price_per_hour + extrasTotal}</Text>
         <Button title="Reservar ahora" onPress={handleReserve} />
       </View>
       <View style={{ marginBottom: 20 }}>

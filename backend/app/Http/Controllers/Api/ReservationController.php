@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
-use App\Models\SharedCost;
+use App\Models\ReservationItem;
+
 use App\Jobs\SendReservationReminder;
 use App\Jobs\NotifyWaitlist;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class ReservationController extends Controller
      */
     public function index(Request $request)
     {
-        $reservations = Auth::user()->reservations()->with('field.club')->get();
+        $reservations = Auth::user()->reservations()->with('field.club', 'items.rentalItem')->get();
         return response()->json($reservations);
     }
 
@@ -33,13 +34,24 @@ class ReservationController extends Controller
             'field_id' => 'required|exists:fields,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'recurrence_interval' => 'nullable|in:daily,weekly',
-            'recurrence_count' => 'nullable|integer|min:1|max:52',
+            'items' => 'array',
+            'items.*.rental_item_id' => 'exists:rental_items,id',
+            'items.*.quantity' => 'integer|min:1',
         ]);
 
-        $field = Field::with('club')->findOrFail($data['field_id']);
+        $field = Field::with('rentalItems')->findOrFail($data['field_id']);
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
-        $price = $field->price_per_hour * $hours;
+        $basePrice = $field->price_per_hour * $hours;
+        $extrasPrice = 0;
+
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $rental = $field->rentalItems->firstWhere('id', $item['rental_item_id']);
+                if ($rental) {
+                    $extrasPrice += $rental->price * ($item['quantity'] ?? 1);
+                }
+            }
+        }
 
         $alert = null;
         if ($field->club && $field->club->latitude && $field->club->longitude) {
@@ -56,24 +68,29 @@ class ReservationController extends Controller
             'user_id' => Auth::id(),
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
-            'price' => $price,
+            'price' => $basePrice + $extrasPrice,
             'status' => 'confirmed',
             'weather_alert' => $alert,
         ]);
 
-        foreach ($reservations as $reservation) {
-            SendReservationReminder::dispatch($reservation)
-                ->delay($reservation->start_time->subHour());
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $rental = $field->rentalItems->firstWhere('id', $item['rental_item_id']);
+                if ($rental) {
+                    ReservationItem::create([
+                        'reservation_id' => $reservation->id,
+                        'rental_item_id' => $rental->id,
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $rental->price,
+                    ]);
+                }
+            }
         }
 
-        $points = (int) floor($price / 10);
-        if ($points > 0) {
-            LoyaltyPoint::create([
-                'user_id' => Auth::id(),
-                'points' => $points,
-                'description' => 'Reserva campo: ' . $field->name,
-            ]);
-        }
+        $reservation->load('items.rentalItem');
+
+        SendReservationReminder::dispatch($reservation)
+            ->delay($reservation->start_time->subHour());
 
         return response()->json($reservation, 201);
     }
@@ -87,7 +104,7 @@ class ReservationController extends Controller
             abort(403);
         }
 
-        $reservation->load('field.club');
+        $reservation->load('field.club', 'items.rentalItem');
         return response()->json($reservation);
     }
 
@@ -128,7 +145,8 @@ class ReservationController extends Controller
 
         $field = $reservation->field()->with('club')->first();
         $hours = (strtotime($data['end_time']) - strtotime($data['start_time'])) / 3600;
-        $price = $field->price_per_hour * $hours;
+        $basePrice = $field->price_per_hour * $hours;
+        $extras = $reservation->items->sum(fn($item) => $item->price * $item->quantity);
 
         $alert = null;
         if ($field->club && $field->club->latitude && $field->club->longitude) {
@@ -142,15 +160,10 @@ class ReservationController extends Controller
 
         $reservation->start_time = $data['start_time'];
         $reservation->end_time = $data['end_time'];
-        $reservation->price = $price;
-        $reservation->weather_alert = $alert;
+        $reservation->price = $basePrice + $extras;
         $reservation->save();
 
-        SendPushNotification::dispatch(
-            $reservation->user,
-            'Reserva actualizada',
-            'Tu reserva fue modificada'
-        );
+        $reservation->load('items.rentalItem');
 
         return response()->json($reservation);
     }

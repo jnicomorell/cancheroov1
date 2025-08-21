@@ -46,7 +46,12 @@ class Reservation extends Model
             ->withTimestamps();
     }
 
-    public function waitlist(): BelongsToMany
+    public function items(): HasMany
+    {
+        return $this->hasMany(ReservationItem::class);
+    }
+
+    public static function createPeriodic(array $data, int $count): array
     {
         return $this->belongsToMany(User::class, 'reservation_waitlist')->withTimestamps();
     }
