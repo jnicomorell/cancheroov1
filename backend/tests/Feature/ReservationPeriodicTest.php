@@ -35,10 +35,12 @@ class ReservationPeriodicTest extends TestCase
             'end_time' => '2025-08-21 11:00:00',
             'price' => 100,
             'status' => 'confirmed',
-            'paid' => false,
+            'payment_status' => 'pending',
+            'recurrence_interval' => 'weekly',
+            'recurrence_count' => 3,
         ];
 
-        Reservation::createPeriodic($data, 3);
+        Reservation::createWithRecurrence($data);
 
         $this->assertDatabaseCount('reservations', 3);
         $this->assertDatabaseHas('reservations', ['start_time' => '2025-08-21 10:00:00']);
