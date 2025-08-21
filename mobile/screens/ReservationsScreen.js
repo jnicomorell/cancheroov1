@@ -53,9 +53,8 @@ export default function ReservationsScreen() {
         renderItem={({ item }) => (
           <View style={{ marginBottom: 12 }}>
             <Text>{item.field.name} - {item.start_time}</Text>
-            <Text>Pago: {item.payment_status}</Text>
-            {item.payment_status === 'pending' && (
-              <Button title="Pagar" onPress={() => payReservation(item.id)} />
+            {item.weather_alert && (
+              <Text style={{ color: 'red' }}>{item.weather_alert}</Text>
             )}
             {item.status === 'confirmed' && (
               <Button title="Cancelar" onPress={() => cancelReservation(item.id)} />

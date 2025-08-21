@@ -18,8 +18,7 @@ class Reservation extends Model
         'price',
         'status',
         'payment_status',
-        'recurrence_interval',
-        'recurrence_count',
+        'weather_alert',
     ];
 
     protected $casts = [
