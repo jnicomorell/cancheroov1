@@ -11,7 +11,7 @@ use App\Jobs\NotifyWaitlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
-use App\Services\WeatherService;
+use App\Models\LoyaltyPoint;
 
 class ReservationController extends Controller
 {
@@ -66,7 +66,16 @@ class ReservationController extends Controller
                 ->delay($reservation->start_time->subHour());
         }
 
-        return response()->json($reservations[0], 201);
+        $points = (int) floor($price / 10);
+        if ($points > 0) {
+            LoyaltyPoint::create([
+                'user_id' => Auth::id(),
+                'points' => $points,
+                'description' => 'Reserva campo: ' . $field->name,
+            ]);
+        }
+
+        return response()->json($reservation, 201);
     }
 
     /**

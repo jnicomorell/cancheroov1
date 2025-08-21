@@ -5,7 +5,8 @@ use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\LoyaltyController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,7 @@ Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->middlewar
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+Route::get('/promotions', [PromotionController::class, 'index']);
 
 Route::get('/chats', [ChatController::class, 'index']);
 Route::get('/chats/{chat}', [ChatController::class, 'show']);
@@ -42,13 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
-    Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
-});
-
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
-    Route::apiResource('schedules', ScheduleController::class);
-    Route::apiResource('prices', PriceController::class);
-    Route::apiResource('payments', PaymentController::class);
-    Route::get('reports/reservations', [ReportController::class, 'reservations']);
-    Route::get('reports/income', [ReportController::class, 'income']);
+    Route::get('/loyalty/balance', [LoyaltyController::class, 'balance']);
+    Route::post('/loyalty/redeem', [LoyaltyController::class, 'redeem']);
 });

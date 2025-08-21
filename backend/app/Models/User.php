@@ -78,13 +78,8 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
-    public function chats()
+    public function loyaltyPoints()
     {
-        return $this->belongsToMany(Chat::class);
-    }
-
-    public function messages()
-    {
-        return $this->hasMany(Message::class);
+        return $this->hasMany(LoyaltyPoint::class);
     }
 }
