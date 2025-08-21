@@ -35,12 +35,25 @@ class ReservationParticipantsTest extends TestCase
             'end_time' => '2025-08-21 11:00:00',
             'price' => 100,
             'status' => 'confirmed',
-            'paid' => false,
+            'payment_status' => 'pending',
         ]);
 
-        $reservation->participants()->attach($participant->id, ['amount' => 50]);
+        $token = $owner->createToken('test')->plainTextToken;
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/reservations/' . $reservation->id . '/participants', [
+                'user_id' => $participant->id,
+                'amount' => 50,
+            ]);
+
+        $response->assertStatus(201);
 
         $this->assertDatabaseHas('reservation_participants', [
+            'reservation_id' => $reservation->id,
+            'user_id' => $participant->id,
+            'amount' => 50,
+        ]);
+
+        $this->assertDatabaseHas('reservation_shared_costs', [
             'reservation_id' => $reservation->id,
             'user_id' => $participant->id,
             'amount' => 50,

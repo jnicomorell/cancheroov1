@@ -47,6 +47,9 @@ export default function FieldDetailScreen({ route }) {
       <Text style={{ fontSize: 24, marginBottom: 8 }}>{field.name}</Text>
       <Text>Deporte: {field.sport}</Text>
       <Text>Precio: ${field.price_per_hour} / hora</Text>
+      <Text>
+        Promedio de calificaciones: {field.average_rating ? field.average_rating.toFixed(1) : 'N/A'}
+      </Text>
       <View style={{ marginVertical: 20 }}>
         <Button title="Reservar ahora" onPress={handleReserve} />
       </View>

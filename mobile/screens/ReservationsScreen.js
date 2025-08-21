@@ -32,6 +32,19 @@ export default function ReservationsScreen() {
       .catch(() => Alert.alert('No se pudo cancelar'));
   };
 
+  const payReservation = (id) => {
+    fetch(`http://localhost:8000/api/reservations/${id}/pay`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then(() => {
+        Alert.alert('Pago realizado');
+        loadReservations();
+      })
+      .catch(() => Alert.alert('No se pudo pagar'));
+  };
+
   return (
     <View style={{ flex: 1, padding: 16 }}>
       <FlatList

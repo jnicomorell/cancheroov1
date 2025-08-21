@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
+use App\Models\SharedCost;
 use App\Jobs\SendReservationReminder;
+use App\Jobs\NotifyWaitlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PaymentService;
@@ -31,6 +33,8 @@ class ReservationController extends Controller
             'field_id' => 'required|exists:fields,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
+            'recurrence_interval' => 'nullable|in:daily,weekly',
+            'recurrence_count' => 'nullable|integer|min:1|max:52',
         ]);
 
         $field = Field::with('club')->findOrFail($data['field_id']);
@@ -57,10 +61,12 @@ class ReservationController extends Controller
             'weather_alert' => $alert,
         ]);
 
-        SendReservationReminder::dispatch($reservation)
-            ->delay($reservation->start_time->subHour());
+        foreach ($reservations as $reservation) {
+            SendReservationReminder::dispatch($reservation)
+                ->delay($reservation->start_time->subHour());
+        }
 
-        return response()->json($reservation, 201);
+        return response()->json($reservations[0], 201);
     }
 
     /**
@@ -131,7 +137,35 @@ class ReservationController extends Controller
         $reservation->weather_alert = $alert;
         $reservation->save();
 
+        SendPushNotification::dispatch(
+            $reservation->user,
+            'Reserva actualizada',
+            'Tu reserva fue modificada'
+        );
+
         return response()->json($reservation);
+    }
+
+    public function addParticipant(Request $request, Reservation $reservation)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $reservation->participants()->attach($data['user_id'], ['amount' => $data['amount']]);
+
+        SharedCost::create([
+            'reservation_id' => $reservation->id,
+            'user_id' => $data['user_id'],
+            'amount' => $data['amount'],
+        ]);
+
+        return response()->json(['message' => 'Participant added'], 201);
     }
 
     /**
@@ -146,6 +180,8 @@ class ReservationController extends Controller
         $reservation->status = 'cancelled';
         $reservation->save();
 
+        NotifyWaitlist::dispatch($reservation);
+
         return response()->json($reservation);
     }
 
@@ -158,5 +194,30 @@ class ReservationController extends Controller
         $paymentService->payReservation($reservation);
 
         return response()->json($reservation);
+    }
+
+    public function invite(Request $request, Reservation $reservation)
+    {
+        if ($reservation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'nullable|numeric',
+        ]);
+
+        $reservation->participants()->attach($data['user_id'], ['amount' => $data['amount'] ?? 0]);
+
+        return response()->json(['message' => 'Invitation sent']);
+    }
+
+    public function confirm(Reservation $reservation)
+    {
+        if (! $reservation->participants()->wherePivot('user_id', Auth::id())->exists()) {
+            abort(403);
+        }
+
+        return response()->json(['message' => 'Participation confirmed']);
     }
 }

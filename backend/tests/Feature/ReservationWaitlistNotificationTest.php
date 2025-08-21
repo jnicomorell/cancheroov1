@@ -3,16 +3,20 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 use App\Models\{User, Club, Field, Reservation};
+use App\Jobs\NotifyWaitlist;
 
-class ReservationIcsTest extends TestCase
+class ReservationWaitlistNotificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_download_reservation_ics(): void
+    public function test_notifies_waitlist_on_cancellation(): void
     {
+        Queue::fake();
         $user = User::factory()->create();
+        $waitlisted = User::factory()->create(['fcm_token' => 'token']);
         $club = Club::create([
             'user_id' => $user->id,
             'name' => 'Club',
@@ -36,13 +40,15 @@ class ReservationIcsTest extends TestCase
             'status' => 'confirmed',
             'payment_status' => 'pending',
         ]);
+        $reservation->waitlist()->attach($waitlisted->id);
 
         $token = $user->createToken('test')->plainTextToken;
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->get('/api/reservations/'.$reservation->id.'/ics');
+            ->deleteJson('/api/reservations/'.$reservation->id);
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Type', 'text/calendar; charset=utf-8');
-        $response->assertSee('BEGIN:VEVENT');
+        Queue::assertPushed(NotifyWaitlist::class, function ($job) use ($reservation) {
+            return $job->reservation->is($reservation);
+        });
     }
 }

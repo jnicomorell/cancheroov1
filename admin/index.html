@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/javascript">
+    const { useState, useEffect } = React;
+    function App() {
+      const [data, setData] = useState({
+        schedules: [],
+        prices: [],
+        payments: [],
+        reservations: 0,
+        income: 0,
+      });
+      useEffect(() => {
+        fetch('/api/admin/schedules').then(r => r.json()).then(d => setData(p => ({ ...p, schedules: d })));
+        fetch('/api/admin/prices').then(r => r.json()).then(d => setData(p => ({ ...p, prices: d })));
+        fetch('/api/admin/payments').then(r => r.json()).then(d => setData(p => ({ ...p, payments: d })));
+        fetch('/api/admin/reports/reservations').then(r => r.json()).then(d => setData(p => ({ ...p, reservations: d.count })));
+        fetch('/api/admin/reports/income').then(r => r.json()).then(d => setData(p => ({ ...p, income: d.total })));
+      }, []);
+      return React.createElement('div', null,
+        React.createElement('h1', null, 'Admin Dashboard'),
+        React.createElement('pre', null, JSON.stringify(data, null, 2))
+      );
+    }
+    ReactDOM.render(React.createElement(App), document.getElementById('root'));
+  </script>
+</body>
+</html>

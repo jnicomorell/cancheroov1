@@ -47,6 +47,24 @@ class FieldManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_patch_field(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $field = $this->createField($admin);
+
+        $token = $admin->createToken('test')->plainTextToken;
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson('/api/fields/'.$field->id, [
+                'name' => 'Patched Field',
+            ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('fields', [
+            'id' => $field->id,
+            'name' => 'Patched Field',
+        ]);
+    }
+
     public function test_client_cannot_update_field(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
