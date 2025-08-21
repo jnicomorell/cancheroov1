@@ -11,7 +11,8 @@ import FieldListScreen from './screens/FieldListScreen';
 import FieldDetailScreen from './screens/FieldDetailScreen';
 import ReservationsScreen from './screens/ReservationsScreen';
 import FiltersScreen from './screens/FiltersScreen';
-import FieldMapScreen from './screens/FieldMapScreen';
+import ChatListScreen from './screens/ChatListScreen';
+import RankingScreen from './screens/RankingScreen';
 
 const RootStack = createNativeStackNavigator();
 const FieldsStack = createNativeStackNavigator();
@@ -42,6 +43,8 @@ function AppTabs() {
     <Tab.Navigator>
       <Tab.Screen name="Canchas" component={FieldsStackScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Mis reservas" component={ReservationsStackScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Chats" component={ChatListScreen} />
+      <Tab.Screen name="Ranking" component={RankingScreen} />
     </Tab.Navigator>
   );
 }

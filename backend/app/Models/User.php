@@ -31,6 +31,7 @@ class User extends Authenticatable
         'password',
         'role',
         'fcm_token',
+        'points',
     ];
 
     /**
@@ -53,7 +54,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => Role::class,
+            'role' => 'string',
+            'points' => 'integer',
         ];
     }
 
@@ -70,5 +72,15 @@ class User extends Authenticatable
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function chats()
+    {
+        return $this->belongsToMany(Chat::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
     }
 }
