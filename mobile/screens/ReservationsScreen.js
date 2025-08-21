@@ -34,6 +34,19 @@ export default function ReservationsScreen() {
       .catch(() => Alert.alert(t('cancel_failed')));
   };
 
+  const payReservation = (id) => {
+    fetch(`http://localhost:8000/api/reservations/${id}/pay`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then(() => {
+        Alert.alert('Pago realizado');
+        loadReservations();
+      })
+      .catch(() => Alert.alert('No se pudo pagar'));
+  };
+
   return (
     <View style={{ flex: 1, padding: 16 }}>
       <FlatList
@@ -42,6 +55,7 @@ export default function ReservationsScreen() {
         renderItem={({ item }) => (
           <View style={{ marginBottom: 12 }}>
             <Text>{item.field.name} - {item.start_time} - {item.price} {currency}</Text>
+
             {item.status === 'confirmed' && (
               <Button title={t('cancel')} onPress={() => cancelReservation(item.id)} />
             )}

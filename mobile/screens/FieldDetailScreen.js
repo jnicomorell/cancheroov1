@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Button, Alert } from 'react-native';
+import { View, Text, Button, Alert, Share } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { useSettings } from '../src/context/SettingsContext';
 
@@ -8,6 +8,7 @@ export default function FieldDetailScreen({ route }) {
   const { token } = useContext(AuthContext);
   const { t, language, currency } = useSettings();
   const [field, setField] = useState(null);
+  const [selectedExtras, setSelectedExtras] = useState([]);
 
   useEffect(() => {
     fetch(`http://localhost:8000/api/fields/${id}?lang=${language}&currency=${currency}`)
@@ -15,6 +16,19 @@ export default function FieldDetailScreen({ route }) {
       .then(setField)
       .catch((err) => console.log(err));
   }, [id, language, currency]);
+
+  const toggleExtra = (itemId) => {
+    setSelectedExtras((prev) =>
+      prev.includes(itemId) ? prev.filter((i) => i !== itemId) : [...prev, itemId]
+    );
+  };
+
+  const extrasTotal =
+    field?.rental_items?.reduce(
+      (sum, item) =>
+        selectedExtras.includes(item.id) ? sum + item.price : sum,
+      0
+    ) || 0;
 
   const handleReserve = () => {
     const now = new Date();
@@ -29,11 +43,19 @@ export default function FieldDetailScreen({ route }) {
         field_id: id,
         start_time: now.toISOString(),
         end_time: end.toISOString(),
+        items: selectedExtras.map((itemId) => ({
+          rental_item_id: itemId,
+          quantity: 1,
+        })),
       }),
     })
       .then((res) => res.json())
       .then(() => Alert.alert(t('reservation_created')))
       .catch(() => Alert.alert(t('reservation_failed')));
+  };
+
+  const handleShare = () => {
+    Share.share({ message: `Mira esta cancha: ${field.name}` });
   };
 
   if (!field) {

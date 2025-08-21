@@ -42,7 +42,9 @@ export default function FieldListScreen({ navigation, route }) {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate('FieldDetail', { id: item.id })}>
-            <Text>{item.name} - {item.sport}</Text>
+            <Text>
+              {item.name} - {item.sport} - Promedio: {item.average_rating ? item.average_rating.toFixed(1) : 'N/A'}
+            </Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={<Text>{t('no_fields')}</Text>}
