@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Button, Alert } from 'react-native';
+import { View, Text, Button, Alert, Share } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
 export default function FieldDetailScreen({ route }) {
@@ -52,6 +52,10 @@ export default function FieldDetailScreen({ route }) {
       .catch(() => Alert.alert('Error al reservar'));
   };
 
+  const handleShare = () => {
+    Share.share({ message: `Mira esta cancha: ${field.name}` });
+  };
+
   if (!field) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -85,6 +89,9 @@ export default function FieldDetailScreen({ route }) {
       <View style={{ marginVertical: 20 }}>
         <Text>Precio total: ${field.price_per_hour + extrasTotal}</Text>
         <Button title="Reservar ahora" onPress={handleReserve} />
+      </View>
+      <View style={{ marginBottom: 20 }}>
+        <Button title="Compartir" onPress={handleShare} />
       </View>
       <Text>Pago, notificaciones y calificaciones estarán disponibles próximamente.</Text>
     </View>

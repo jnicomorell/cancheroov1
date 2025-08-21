@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
+import { View, Text, TextInput, Button, Linking } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
@@ -45,6 +45,15 @@ export default function LoginScreen({ navigation }) {
       />
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
       <Button title="Entrar" onPress={handleLogin} />
+      <View style={{ marginTop: 16 }}>
+        <Button title="Ingresar con Google" onPress={() => Linking.openURL('http://localhost:8000/api/auth/google/redirect')} />
+      </View>
+      <View style={{ marginTop: 16 }}>
+        <Button title="Ingresar con Facebook" onPress={() => Linking.openURL('http://localhost:8000/api/auth/facebook/redirect')} />
+      </View>
+      <View style={{ marginTop: 16 }}>
+        <Button title="Ingresar con Apple" onPress={() => Linking.openURL('http://localhost:8000/api/auth/apple/redirect')} />
+      </View>
       <View style={{ marginTop: 16 }}>
         <Button
           title="Crear cuenta"

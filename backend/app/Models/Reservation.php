@@ -18,12 +18,14 @@ class Reservation extends Model
         'price',
         'status',
         'payment_status',
+        'weather_alert',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'payment_status' => 'string',
+        'recurrence_count' => 'integer',
     ];
 
     public function field(): BelongsTo
@@ -39,6 +41,7 @@ class Reservation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'reservation_participants')
+            ->using(ReservationParticipant::class)
             ->withPivot('amount')
             ->withTimestamps();
     }
@@ -50,15 +53,42 @@ class Reservation extends Model
 
     public static function createPeriodic(array $data, int $count): array
     {
+        return $this->belongsToMany(User::class, 'reservation_waitlist')->withTimestamps();
+    }
+
+    public static function createWithRecurrence(array $data): array
+    {
+        $count = $data['recurrence_count'] ?? 1;
+        $interval = $data['recurrence_interval'] ?? null;
         $reservations = [];
-        for ($i = 0; $i < $count; $i++) {
-            $start = Carbon::parse($data['start_time'])->copy()->addWeek($i);
-            $end = Carbon::parse($data['end_time'])->copy()->addWeek($i);
-            $reservations[] = self::create(array_merge($data, [
-                'start_time' => $start,
-                'end_time' => $end,
-            ]));
+        $reservations[] = self::create($data);
+
+        if ($interval && $count > 1) {
+            $currentStart = Carbon::parse($data['start_time']);
+            $currentEnd = Carbon::parse($data['end_time']);
+            for ($i = 1; $i < $count; $i++) {
+                switch ($interval) {
+                    case 'daily':
+                        $currentStart->addDay();
+                        $currentEnd->addDay();
+                        break;
+                    case 'weekly':
+                        $currentStart->addWeek();
+                        $currentEnd->addWeek();
+                        break;
+                    default:
+                        break 2;
+                }
+
+                $reservations[] = self::create(array_merge($data, [
+                    'start_time' => $currentStart->copy(),
+                    'end_time' => $currentEnd->copy(),
+                    'recurrence_interval' => null,
+                    'recurrence_count' => 1,
+                ]));
+            }
         }
+
         return $reservations;
     }
 }
