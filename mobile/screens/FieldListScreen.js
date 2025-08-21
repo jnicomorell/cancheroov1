@@ -1,7 +1,9 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, FlatList, Button, TouchableOpacity } from 'react-native';
+import { useSettings } from '../src/context/SettingsContext';
 
 export default function FieldListScreen({ navigation, route }) {
+  const { t, language, currency } = useSettings();
   const [fields, setFields] = useState([]);
   const sport = route.params?.sport;
   const city = route.params?.city;
@@ -10,6 +12,8 @@ export default function FieldListScreen({ navigation, route }) {
     const params = new URLSearchParams();
     if (sport) params.append('sport', sport);
     if (city) params.append('city', city);
+    params.append('lang', language);
+    params.append('currency', currency);
     fetch(`http://localhost:8000/api/fields?${params.toString()}`)
       .then((res) => res.json())
       .then((json) => setFields(json.data || []))
@@ -18,24 +22,18 @@ export default function FieldListScreen({ navigation, route }) {
 
   useEffect(() => {
     loadFields();
-  }, [sport, city]);
+  }, [sport, city, language, currency]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <View style={{ flexDirection: 'row' }}>
-          <Button
-            title="Mapa"
-            onPress={() => navigation.navigate('FieldMap', { sport, city })}
-          />
-          <Button
-            title="Filtros"
-            onPress={() => navigation.navigate('Filters', { sport, city })}
-          />
-        </View>
+        <Button
+          title={t('filters')}
+          onPress={() => navigation.navigate('Filters', { sport, city })}
+        />
       ),
     });
-  }, [navigation, sport, city]);
+  }, [navigation, sport, city, t]);
 
   return (
     <View style={{ flex: 1, paddingTop: 20, paddingHorizontal: 16 }}>
@@ -49,7 +47,7 @@ export default function FieldListScreen({ navigation, route }) {
             </Text>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text>No hay canchas</Text>}
+        ListEmptyComponent={<Text>{t('no_fields')}</Text>}
       />
     </View>
   );

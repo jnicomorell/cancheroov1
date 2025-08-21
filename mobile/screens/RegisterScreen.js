@@ -1,16 +1,18 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useSettings } from '../src/context/SettingsContext';
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useContext(AuthContext);
+  const { t, language } = useSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleRegister = () => {
-    fetch('http://localhost:8000/api/register', {
+    fetch(`http://localhost:8000/api/register?lang=${language}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -20,23 +22,23 @@ export default function RegisterScreen({ navigation }) {
         if (json.token) {
           login(json.token);
         } else {
-          setError('Error al registrarse');
+          setError(t('registration_error'));
         }
       })
-      .catch(() => setError('Error de conexión'));
+      .catch(() => setError(t('connection_error')));
   };
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <Text style={{ fontSize: 24, marginBottom: 16 }}>Registro</Text>
+      <Text style={{ fontSize: 24, marginBottom: 16 }}>{t('register_title')}</Text>
       <TextInput
-        placeholder="Nombre"
+        placeholder={t('name')}
         value={name}
         onChangeText={setName}
         style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
       />
       <TextInput
-        placeholder="Email"
+        placeholder={t('email')}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -44,16 +46,16 @@ export default function RegisterScreen({ navigation }) {
         style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
       />
       <TextInput
-        placeholder="Contraseña"
+        placeholder={t('password')}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         style={{ borderWidth: 1, marginBottom: 12, padding: 8 }}
       />
       {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-      <Button title="Registrarse" onPress={handleRegister} />
+      <Button title={t('register_button')} onPress={handleRegister} />
       <View style={{ marginTop: 16 }}>
-        <Button title="Volver" onPress={() => navigation.goBack()} />
+        <Button title={t('back')} onPress={() => navigation.goBack()} />
       </View>
     </View>
   );

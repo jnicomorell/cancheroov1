@@ -5,25 +5,33 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Field;
 use Illuminate\Http\Request;
+use App\Services\CurrencyService;
 
 class FieldController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, CurrencyService $currencyService)
     {
-        $fields = Field::query()->with('club');
-        $this->applyFilters($fields, $request);
-        $fields->withAvg('reviews as average_rating', 'rating');
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
+        }
+        $currency = $request->query('currency');
 
-        $this->applyFilters($fields, $request);
+        $fields = Field::query()
+            ->with('club')
+            ->withAvg('reviews as average_rating', 'rating');
 
-        $this->applyFilters($fields, $request);
+        $paginated = $fields->paginate();
+        if ($currency) {
+            $paginated->getCollection()->transform(function ($field) use ($currencyService, $currency) {
+                $field->price_per_hour = $currencyService->convert($field->price_per_hour, $currency);
+                return $field;
+            });
+        }
 
-        $this->applyFilters($fields, $request);
-
-        return response()->json($fields->paginate());
+        return response()->json($paginated);
     }
 
     public function map(Request $request)
@@ -131,10 +139,18 @@ class FieldController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Field $field)
+    public function show(Request $request, Field $field, CurrencyService $currencyService)
     {
-        $field->load('club', 'rentalItems')
+        if ($request->filled('lang')) {
+            app()->setLocale($request->lang);
+        }
+        $field->load('club')
             ->loadAvg('reviews as average_rating', 'rating');
+
+        if ($currency = $request->query('currency')) {
+            $field->price_per_hour = $currencyService->convert($field->price_per_hour, $currency);
+        }
+
         return response()->json($field);
     }
 
@@ -174,3 +190,4 @@ class FieldController extends Controller
         return response()->json(null, 204);
     }
 }
+

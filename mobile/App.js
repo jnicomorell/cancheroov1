@@ -11,7 +11,7 @@ import FieldListScreen from './screens/FieldListScreen';
 import FieldDetailScreen from './screens/FieldDetailScreen';
 import ReservationsScreen from './screens/ReservationsScreen';
 import FiltersScreen from './screens/FiltersScreen';
-import LoyaltyScreen from './screens/LoyaltyScreen';
+import { SettingsProvider, useSettings } from './src/context/SettingsContext';
 
 const RootStack = createNativeStackNavigator();
 const FieldsStack = createNativeStackNavigator();
@@ -19,46 +19,42 @@ const ReservationsStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function FieldsStackScreen() {
+  const { t } = useSettings();
   return (
     <FieldsStack.Navigator>
-      <FieldsStack.Screen name="Fields" component={FieldListScreen} options={{ title: 'Canchas' }} />
-      <FieldsStack.Screen name="FieldDetail" component={FieldDetailScreen} options={{ title: 'Detalle' }} />
-      <FieldsStack.Screen name="Filters" component={FiltersScreen} options={{ title: 'Filtros' }} />
-      <FieldsStack.Screen name="FieldMap" component={FieldMapScreen} options={{ title: 'Mapa' }} />
+      <FieldsStack.Screen name="Fields" component={FieldListScreen} options={{ title: t('fields') }} />
+      <FieldsStack.Screen name="FieldDetail" component={FieldDetailScreen} options={{ title: t('detail') }} />
+      <FieldsStack.Screen name="Filters" component={FiltersScreen} options={{ title: t('filters') }} />
     </FieldsStack.Navigator>
   );
 }
 
 function ReservationsStackScreen() {
+  const { t } = useSettings();
   return (
     <ReservationsStack.Navigator>
-      <ReservationsStack.Screen name="Reservations" component={ReservationsScreen} options={{ title: 'Reservas' }} />
+      <ReservationsStack.Screen name="Reservations" component={ReservationsScreen} options={{ title: t('reservations') }} />
     </ReservationsStack.Navigator>
   );
 }
 
 function AppTabs() {
+  const { t } = useSettings();
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Canchas" component={FieldsStackScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Mis reservas" component={ReservationsStackScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Promos" component={LoyaltyScreen} />
+      <Tab.Screen name="Canchas" component={FieldsStackScreen} options={{ title: t('fields'), headerShown: false }} />
+      <Tab.Screen name="Mis reservas" component={ReservationsStackScreen} options={{ title: t('my_reservations'), headerShown: false }} />
     </Tab.Navigator>
   );
 }
 
 function RootNavigator() {
   const { token, loading } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (token) {
-      registerForPushNotificationsAsync(token);
-    }
-  }, [token]);
+  const { t } = useSettings();
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Cargando...</Text>
+        <Text>{t('loading')}</Text>
       </View>
     );
   }
@@ -78,10 +74,12 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
-    </AuthProvider>
+    <SettingsProvider>
+      <AuthProvider>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </AuthProvider>
+    </SettingsProvider>
   );
 }
