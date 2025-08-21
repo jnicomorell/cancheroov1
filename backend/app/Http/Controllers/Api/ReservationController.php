@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Field;
 use App\Models\Reservation;
 use App\Models\ReservationItem;
+use App\Models\SharedCost;
 
 use App\Jobs\SendReservationReminder;
 use App\Jobs\NotifyWaitlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\PaymentService;
+use App\Services\{PaymentService, WeatherService};
 use App\Models\LoyaltyPoint;
 
 class ReservationController extends Controller
@@ -30,6 +31,8 @@ class ReservationController extends Controller
      */
     public function store(Request $request, WeatherService $weatherService)
     {
+        $this->authorize('create', Reservation::class);
+
         $data = $request->validate([
             'field_id' => 'required|exists:fields,id',
             'start_time' => 'required|date',
@@ -134,9 +137,7 @@ class ReservationController extends Controller
      */
     public function update(Request $request, Reservation $reservation, WeatherService $weatherService)
     {
-        if ($reservation->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('update', $reservation);
 
         $data = $request->validate([
             'start_time' => 'required|date',
@@ -195,9 +196,7 @@ class ReservationController extends Controller
      */
     public function destroy(Reservation $reservation)
     {
-        if ($reservation->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('delete', $reservation);
 
         $reservation->status = 'cancelled';
         $reservation->save();
@@ -209,9 +208,7 @@ class ReservationController extends Controller
 
     public function pay(Reservation $reservation, PaymentService $paymentService)
     {
-        if ($reservation->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('update', $reservation);
 
         $paymentService->payReservation($reservation);
 
